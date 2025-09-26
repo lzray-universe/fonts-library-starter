@@ -96,9 +96,10 @@ async function copyFonts(family, pair) {
 }
 
 function fontFaceCSS(family, variant, paths) {
+  const resolveForCss = (p) => path.posix.join('..', p).replace(/\\/g, '/');
   const sources = [];
-  if (paths.woff2) sources.push(`url('/${paths.woff2}') format('woff2')`);
-  if (paths.ttf) sources.push(`url('/${paths.ttf}') format('truetype')`);
+  if (paths.woff2) sources.push(`url('${resolveForCss(paths.woff2)}') format('woff2')`);
+  if (paths.ttf) sources.push(`url('${resolveForCss(paths.ttf)}') format('truetype')`);
   const src = sources.join(', ');
   return `@font-face {
   font-family: '${esc(family)}';
@@ -140,15 +141,15 @@ async function build() {
         base: v.base,
         weight: v.weight,
         style: v.style,
-        woff2: paths.woff2 ? '/'+paths.woff2 : null,
-        ttf: paths.ttf ? '/'+paths.ttf : null,
+        woff2: paths.woff2 ?? null,
+        ttf: paths.ttf ?? null,
       });
     }
     const famCssPath = path.join(OUT_CSS, `${fam.family}.css`);
     await fs.writeFile(famCssPath, famCSS, 'utf8');
     jsonOut.push({
       family: famName,
-      css: `/css/${fam.family}.css`,
+      css: `css/${fam.family}.css`,
       variants: outVariants
     });
   }
@@ -187,7 +188,7 @@ async function build() {
     <h1>Online Fonts</h1>
     <input id="q" placeholder="搜索字体家族/变体…（支持拼音/英文关键字）">
     <div class="topbar-links">
-      <a href="/console/">Console</a>
+      <a href="./console/">Console</a>
       <a href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
     </div>
   </header>
@@ -198,6 +199,8 @@ async function build() {
 async function load() {
   const res = await fetch('./fonts.json');
   const data = await res.json();
+  const baseURL = new URL('.', res.url);
+  const assetUrl = (rel) => rel ? new URL(rel, baseURL).href : null;
   const list = document.getElementById('list');
   const q = document.getElementById('q');
   function render(filter='') {
@@ -210,12 +213,12 @@ async function load() {
       card.className = 'card';
       card.innerHTML = \`
         <div class="family">\${fam.family}</div>
-        <div class="muted">\${fam.variants.length} 个变体 · <a class="btn" href="\${fam.css}">CSS</a></div>
+        <div class="muted">\${fam.variants.length} 个变体 · <a class="btn" href="\${assetUrl(fam.css)}">CSS</a></div>
         <table>
           <thead><tr><th>变体</th><th>weight</th><th>style</th><th>下载</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="code"><code>&lt;link rel="stylesheet" href="https://fonts.lzray.com\${fam.css}"&gt;</code></div>
+        <div class="code"><code>&lt;link rel="stylesheet" href="https://fonts.lzray.com/\${fam.css}"&gt;</code></div>
       \`;
       const tbody = card.querySelector('tbody');
       for (const v of fam.variants) {
@@ -225,8 +228,8 @@ async function load() {
           <td>\${v.weight}</td>
           <td>\${v.style}</td>
           <td>
-            \${v.woff2 ? \`<a class="btn" href="\${v.woff2}" download>woff2</a>\` : ''}
-            \${v.ttf ? \`<a class="btn" href="\${v.ttf}" download>ttf</a>\` : ''}
+            \${v.woff2 ? \`<a class="btn" href="\${assetUrl(v.woff2)}" download>woff2</a>\` : ''}
+            \${v.ttf ? \`<a class="btn" href="\${assetUrl(v.ttf)}" download>ttf</a>\` : ''}
           </td>
         \`;
         tbody.appendChild(tr);
@@ -292,6 +295,8 @@ load();
 async function init() {
   const res = await fetch('../fonts.json');
   const data = await res.json();
+  const baseURL = new URL('.', res.url);
+  const assetUrl = (rel) => rel ? new URL(rel, baseURL).href : null;
   const famSel = document.getElementById('family');
   const varSel = document.getElementById('variant');
   const prev = document.getElementById('preview');
@@ -322,7 +327,7 @@ async function init() {
   function updateCode() {
     const fam = data.find(f => f.family === famSel.value);
     if (!fam) return;
-    const link = \`<link rel="stylesheet" href="https://fonts.lzray.com\${fam.css}">\`;
+    const link = \`<link rel="stylesheet" href="https://fonts.lzray.com/\${fam.css}">\`;
     const familyDecl = \`font-family: '\${fam.family}', system-ui, sans-serif;\`;
     const vbase = varSel.value;
     let extra = '';
@@ -342,7 +347,7 @@ async function init() {
     const lk = document.createElement('link');
     lk.id = 'famcss';
     lk.rel = 'stylesheet';
-    lk.href = fam.css;
+    lk.href = assetUrl(fam.css);
     document.head.appendChild(lk);
     prev.style.fontFamily = "'" + fam.family + "', system-ui, sans-serif";
     prev.style.fontWeight = 'normal';
