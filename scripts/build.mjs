@@ -128,7 +128,7 @@ async function build() {
   // Per-family CSS
   let allCSS = '';
   for (const fam of families) {
-    const famName = sanitizeFamilyName(fam);
+    const famName = sanitizeFamilyName(fam.family);
     let famCSS = '';
     const outVariants = [];
     for (const v of fam.variants) {
@@ -144,11 +144,11 @@ async function build() {
         ttf: paths.ttf ? '/'+paths.ttf : null,
       });
     }
-    const famCssPath = path.join(OUT_CSS, `${fam}.css`);
+    const famCssPath = path.join(OUT_CSS, `${fam.family}.css`);
     await fs.writeFile(famCssPath, famCSS, 'utf8');
     jsonOut.push({
       family: famName,
-      css: `/css/${fam}.css`,
+      css: `/css/${fam.family}.css`,
       variants: outVariants
     });
   }
