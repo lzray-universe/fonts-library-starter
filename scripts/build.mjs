@@ -328,12 +328,12 @@ async function init() {
     let extra = '';
     if (vbase) {
       const v = fam.variants.find(x => x.base === vbase) || {};
-      extra = \\`
+      extra = \`
 /* 可选：限定变体 */
 .sample {
   font-weight: \${v.weight||400};
   font-style: \${v.style||'normal'};
-}\\`;
+}\`;
     }
     code.value = link + "\\n\\n<style>\\nbody { " + familyDecl + " }\\n" + extra + "\\n</style>";
     // live preview
