@@ -132,7 +132,7 @@ async function build() {
     let famCSS = '';
     const outVariants = [];
     for (const v of fam.variants) {
-      const paths = await copyFonts(fam, v.pair);
+      const paths = await copyFonts(fam.family, v.pair);
       if (!paths.woff2 && !paths.ttf) continue;
       famCSS += fontFaceCSS(famName, v, paths);
       allCSS += fontFaceCSS(famName, v, paths);
